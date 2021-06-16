@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Row,
   Col,
@@ -8,18 +10,15 @@ import {
   Button,
   Form,
 } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import Rating from "../components/Rating";
-import { useDispatch, useSelector } from "react-redux";
+import Message from "../components/Message";
+import Loader from "../components/Loader";
+import Meta from "../components/Meta";
 import {
   listProductDetails,
   createProductReview,
 } from "../actions/productActions";
-import Loader from "../components/Loader";
-import Message from "../components/Message";
-import { addToCart } from "../actions/cartActions";
 import { PRODUCT_CREATE_REVIEW_RESET } from "../constants/productConstants";
-import Meta from "../components/Meta";
 
 const ProductScreen = ({ history, match }) => {
   const [qty, setQty] = useState(1);
@@ -29,31 +28,31 @@ const ProductScreen = ({ history, match }) => {
   const dispatch = useDispatch();
 
   const productDetails = useSelector((state) => state.productDetails);
-  const { error, loading, product } = productDetails;
+  const { loading, error, product } = productDetails;
 
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
   const productReviewCreate = useSelector((state) => state.productReviewCreate);
   const {
-    error: errorProductReview,
     success: successProductReview,
+    loading: loadingProductReview,
+    error: errorProductReview,
   } = productReviewCreate;
 
   useEffect(() => {
     if (successProductReview) {
-      alert("Review submitted!");
       setRating(0);
       setComment("");
+    }
+    if (!product._id || product._id !== match.params.id) {
+      dispatch(listProductDetails(match.params.id));
       dispatch({ type: PRODUCT_CREATE_REVIEW_RESET });
     }
-    dispatch(listProductDetails(match.params.id));
-  }, [dispatch, match, successProductReview]);
+  }, [dispatch, product._id, match, successProductReview]);
 
   const addToCartHandler = () => {
-    // history.push(`/cart/${match.params.id}?qty=${qty}`);
-    dispatch(addToCart(product._id, qty));
-    history.push("/cart");
+    history.push(`/cart/${match.params.id}?qty=${qty}`);
   };
 
   const submitHandler = (e) => {
@@ -95,7 +94,7 @@ const ProductScreen = ({ history, match }) => {
                 </ListGroup.Item>
                 <ListGroup.Item>Price: ${product.price}</ListGroup.Item>
                 <ListGroup.Item>
-                  Description: ${product.description}
+                  Description: {product.description}
                 </ListGroup.Item>
               </ListGroup>
             </Col>
@@ -110,11 +109,12 @@ const ProductScreen = ({ history, match }) => {
                       </Col>
                     </Row>
                   </ListGroup.Item>
+
                   <ListGroup.Item>
                     <Row>
                       <Col>Status:</Col>
                       <Col>
-                        {product.countInStock > 0 ? "In Stock" : "Out of Stock"}
+                        {product.countInStock > 0 ? "In Stock" : "Out Of Stock"}
                       </Col>
                     </Row>
                   </ListGroup.Item>
@@ -141,14 +141,15 @@ const ProductScreen = ({ history, match }) => {
                       </Row>
                     </ListGroup.Item>
                   )}
+
                   <ListGroup.Item>
                     <Button
                       onClick={addToCartHandler}
                       className="btn-block"
-                      disabled={product.countInStock === 0}
                       type="button"
+                      disabled={product.countInStock === 0}
                     >
-                      Add to Cart
+                      Add To Cart
                     </Button>
                   </ListGroup.Item>
                 </ListGroup>
@@ -169,7 +170,13 @@ const ProductScreen = ({ history, match }) => {
                   </ListGroup.Item>
                 ))}
                 <ListGroup.Item>
-                  <h2>Write a customer Review</h2>
+                  <h2>Write a Customer Review</h2>
+                  {successProductReview && (
+                    <Message variant="success">
+                      Review submitted successfully
+                    </Message>
+                  )}
+                  {loadingProductReview && <Loader />}
                   {errorProductReview && (
                     <Message variant="danger">{errorProductReview}</Message>
                   )}
@@ -199,13 +206,17 @@ const ProductScreen = ({ history, match }) => {
                           onChange={(e) => setComment(e.target.value)}
                         ></Form.Control>
                       </Form.Group>
-                      <Button type="submit" variant="primary">
+                      <Button
+                        disabled={loadingProductReview}
+                        type="submit"
+                        variant="primary"
+                      >
                         Submit
                       </Button>
                     </Form>
                   ) : (
                     <Message>
-                      Please <link to="/login">sign in</link> to create a review{" "}
+                      Please <Link to="/login">sign in</Link> to write a review{" "}
                     </Message>
                   )}
                 </ListGroup.Item>

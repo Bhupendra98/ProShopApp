@@ -16,6 +16,12 @@ const ShippingScreen = ({ history }) => {
 
   const dispatch = useDispatch();
 
+  const userLogin = useSelector((state) => state.userLogin);
+  const { userInfo } = userLogin;
+  if (!userInfo) {
+    history.push("/login");
+  }
+
   const submitHandler = (e) => {
     e.preventDefault();
     dispatch(saveShippingAddress({ address, city, postalCode, country }));

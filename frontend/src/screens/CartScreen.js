@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Row,
   Col,
@@ -8,26 +10,24 @@ import {
   Button,
   Card,
 } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import Message from "../components/Message";
 import { addToCart, removeFromCart } from "../actions/cartActions";
 
-const CartScreen = ({ history, match, location }) => {
-  // const productId = match.params.id;
+const CartScreen = ({ match, location, history }) => {
+  const productId = match.params.id;
 
-  // const qty = location.search ? Number(location.search.split("=")[1]) : 1;
+  const qty = location.search ? Number(location.search.split("=")[1]) : 1;
 
   const dispatch = useDispatch();
 
   const cart = useSelector((state) => state.cart);
   const { cartItems } = cart;
 
-  // useEffect(() => {
-  //   if (productId) {
-  //     dispatch(addToCart(productId, qty));
-  //   }
-  // }, [dispatch, qty, productId]);
+  useEffect(() => {
+    if (productId) {
+      dispatch(addToCart(productId, qty));
+    }
+  }, [dispatch, productId, qty]);
 
   const removeFromCartHandler = (id) => {
     dispatch(removeFromCart(id));
@@ -94,8 +94,8 @@ const CartScreen = ({ history, match, location }) => {
           <ListGroup variant="flush">
             <ListGroup.Item>
               <h2>
-                Subtotal (
-                {cartItems.reduce((acc, item) => acc + item.qty * 1, 0)}) items
+                Subtotal ({cartItems.reduce((acc, item) => acc + item.qty, 0)})
+                items
               </h2>
               $
               {cartItems
